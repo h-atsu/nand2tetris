@@ -40,5 +40,34 @@ CHIP ALU {
         ng;      // if (out < 0)  equals 1, else 0
 
     PARTS:
-    //// Replace this comment with your code.
+    // 0変更処理
+    Mux16(a=x , b=false , sel=zx , out= wzx);
+    Mux16(a=y , b=false , sel=zy , out= wzy);
+
+    // 反転処理
+    Not16(in=wzx , out=negwzx);
+    Not16(in=wzy , out=negwzy);
+
+    Mux16(a=wzx , b=negwzx , sel=nx , out=wx);
+    Mux16(a=wzy , b=negwzy , sel=ny , out=wy);
+
+    //加算,論理積計算
+    Add16(a=wx , b=wy , out=addout);
+    And16(a=wx , b=wy , out=andout);
+    Mux16(a=andout , b=addout , sel=f , out=wout);
+
+    //出力反転処理
+    Not16(in=wout , out=negwout);
+    Mux16(a=wout , b=negwout , sel=no , out=out , out[0..7]=out0to7 , out[8..15]=out8to15 , out[15]=ng);
+
+    // (out == 0)
+    Or8Way(in=out0to7 , out=or0to7);
+    Or8Way(in=out8to15 , out=or8to15);
+    Or(a=or0to7 , b=or8to15 , out=wor);
+    Not(in=wor , out=zr);
+
+
+
+
+
 }

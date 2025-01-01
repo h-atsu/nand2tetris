@@ -31,5 +31,28 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+    And(a=instruction[3] , b=instruction[15] , out=writeM);
+    And(a=instruction[15] , b=instruction[4] , out=loadD);
+
+    Mux16(a=instruction , b=aluout , sel=instruction[15] , out=arin); // A命令かC命令かの判定
+    Not(in=instruction[15] , out=isAinst);
+    Or(a=isAinst, b=instruction[5], out=lar);
+    ARegister(in=arin , load=lar , out=arout , out[0..14]=addressM);
+    DRegister(in=aluout , load=loadD , out=drout);
+    Mux16(a=arout , b=inM , sel=instruction[12] , out=aorram);
+    ALU(x=drout , y=aorram , zx=instruction[11] , nx=instruction[10] , zy=instruction[9] , ny=instruction[8] , f=instruction[7] , no=instruction[6] , out=aluout, out=outM , zr=zr , ng=ng);
+
+    // jumpの判定
+    Not(in=zr , out=notzr);
+    Not(in=ng , out=notng);
+    And(a=notng , b=notzr , out=ps);
+
+    And(a=ps , b=instruction[0] , out=w1);
+    And(a=ng , b=instruction[2] , out=w2);
+    And(a=zr , b=instruction[1] , out=w3);
+    Or(a=w1 , b=w2 , out=w4);
+    Or(a=w3 , b=w4 , out=w5);
+    And(a=instruction[15] , b=w5 , out=loadpc);
+
+    PC(in=arout , load=loadpc , inc=true , reset=reset , out[0..14]=pc);
 }
